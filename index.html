@@ -3,33 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game:Tic-Tac-Toe </title>
+    <title>Game: Tic-Tac-Toe</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="msg-container hide">
-        <p id="msg">Winner</p>
-        <button class="newGamebtn">New Game</button>
+        <p id="msg" class="msg">Winner</p>
+        <p class="sub-msg">Starting a new round…</p>
+        <button class="newGamebtn">New round now</button>
     </div>
-   <main>
-    <H1>Tic-Tac-Toe</H1>
-    <H2>Wellcome to the Game </H2>
-    
-    <div class="GameArea">
-        <div class="game">
-            <button class="box"></button>
-            <button class="box"></button>
-            <button class="box"></button>
-            <button class="box"></button>
-            <button class="box"></button>
-            <button class="box"></button>
-            <button class="box"></button>
-            <button class="box"></button>
-            <button class="box"></button>
+    <main>
+        <h1>Tic-Tac-Toe</h1>
+        <h2>Welcome to the game</h2>
+
+        <div class="controls">
+            <label for="boardSize">Board size</label>
+            <select id="boardSize">
+                <option value="3">3 &times; 3</option>
+                <option value="6">6 &times; 6</option>
+                <option value="9">9 &times; 9</option>
+            </select>
         </div>
-    </div>
-    <button class="reset">Reset Game</button>
-</main>
+
+        <div class="scoreboard">
+            <span class="score-o">O: <span id="scoreO">0</span></span>
+            <span class="score-draw">Draws: <span id="scoreDraw">0</span></span>
+            <span class="score-x">X: <span id="scoreX">0</span></span>
+        </div>
+
+        <p class="turn-indicator" id="turnIndicator">Turn: O</p>
+
+        <div class="GameArea">
+            <div class="game" id="game"></div>
+        </div>
+        <button class="reset">Reset game</button>
+    </main>
+    <script src="script.js"></script>
 </body>
-<script src="script.js"></script>
 </html>

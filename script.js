@@ -1,171 +1,189 @@
-// console.log("Hello coders")
+console.log("Tic-Tac-Toe ready");
 
-// let boxes = document.querySelectorAll(".box");
-// let resetbtn = document.querySelector("reset");
-// let newGamebtn = document.querySelector("newGamebtn");
-// let msgContainer = document.querySelector("msg-container");
-// let msg = document.querySelector("msg");
+const gameEl = document.getElementById("game");
+const boardSizeSelect = document.getElementById("boardSize");
+const resetBtn = document.querySelector(".reset");
+const newGameBtn = document.querySelector(".newGamebtn");
+const msgContainer = document.querySelector(".msg-container");
+const msg = document.getElementById("msg");
+const turnIndicator = document.getElementById("turnIndicator");
+const scoreOEl = document.getElementById("scoreO");
+const scoreXEl = document.getElementById("scoreX");
+const scoreDrawEl = document.getElementById("scoreDraw");
 
-// let turnO = true;//playerX , playerO
+// How many in a row counts as a win, per board size. Bigger boards need a
+// longer run so the game stays a real challenge instead of ending in the
+// first couple of moves.
+const WIN_LENGTH_BY_SIZE = { 3: 3, 6: 4, 9: 5 };
+const AUTO_RESTART_DELAY_MS = 2200;
 
-// const winPatterns = [
-//     [0,1,2],
-//     [0,3,6],
-//     [0,4,8],
-//     [1,4,7],
-//     [2,5,8],
-//     [2,4,6],
-//     [3,4,5],
-//     [6,7,8]
-// ];
+let size = 3;
+let winLength = 3;
+let board = [];
+let turnO = true;
+let roundOver = false;
+let autoRestartTimer = null;
+let scoreO = 0, scoreX = 0, scoreDraw = 0;
 
-// const resetGame = () =>{
-//     turnO = true;
-//     enableboxes();
-//     masContainer.classList.add("hide");
+function buildBoard() {
+    size = parseInt(boardSizeSelect.value, 10) || 3;
+    winLength = WIN_LENGTH_BY_SIZE[size] || 3;
+    board = new Array(size * size).fill("");
+    turnO = true;
+    roundOver = false;
 
-// }
+    gameEl.style.setProperty("--size", String(size));
+    gameEl.innerHTML = "";
 
-// boxes.forEach((box) => {
-//     box.addEventListener("click", () => {
-//         console.log("Box was clicked");
-//         if(turnO) { //playerO
-//             box.innerText = "O";
-//             turnO = false;
-//         }
-//         else{ //playerX
-//             box.innerText="X";
-//             turnO = true;
-//         }
-//         box.disabled = true;
+    for (let i = 0; i < size * size; i++) {
+        const box = document.createElement("button");
+        box.type = "button";
+        box.className = "box";
+        box.dataset.index = String(i);
+        gameEl.appendChild(box);
+    }
+    updateTurnIndicator();
+}
 
-//         checkWinner();
-//     });
-// });
-// const disableboxes = () =>{
-//     for(let box of boxes){
-//         box.disabled = true ;
-//     }
-// }
-// const enableboxes = () =>{
-//     for(let box of boxes){
-//         box.disabled = false;
-//         box.innerText = "";
-//     }
-// }
-// const showWinner = (winner) =>{
-//     msg.innerText =`Congratulations, Winner is ${winner}`;
-//     msgContainer.classList.remove("hide");
-//     disableboxes();
-// };
+function updateTurnIndicator() {
+    turnIndicator.textContent = `Turn: ${turnO ? "O" : "X"}`;
+}
 
-// const checkWinner = () =>{
-//     for(pattern of winPatterns){
-//         let pos1val = boxes[pattern[0]].innerText
-//         let pos2val = boxes[pattern[1]].innerText
-//         let pos3val = boxes[pattern[2]].innerText
+function updateScoreboard() {
+    scoreOEl.textContent = String(scoreO);
+    scoreXEl.textContent = String(scoreX);
+    scoreDrawEl.textContent = String(scoreDraw);
+}
 
-//         if(pos1val != "" && pos2val != "" && pos3val != "" ){
-//             if(pos1val === pos2val && pos2val === pos3val){
-//                 console.log("winner" ,pos1val);
+// Checks only the four lines that pass through the cell that was just
+// played (row, col) — horizontal, vertical, and both diagonals — and
+// returns the winning cell indices, or null if there's no win yet.
+function checkWinFrom(row, col) {
+    const player = board[row * size + col];
+    if (!player) return null;
 
-//                 showWinner(pos1val);
-//             }
-//         }
-//     }
-// };
+    const directions = [
+        [0, 1],
+        [1, 0],
+        [1, 1],
+        [1, -1]
+    ];
 
-// newGamebtn.addEventListener("click", resetGame);
-// resetbtn.addEventListener("click", resetGame);
-console.log("Hello coders");
+    for (const [dr, dc] of directions) {
+        const cells = [[row, col]];
 
-let boxes = document.querySelectorAll(".box");
-let resetBtn = document.querySelector(".reset"); // Fixed selector to target class
-let newGameBtn = document.querySelector(".newGamebtn"); // Fixed selector to target class
-let msgContainer = document.querySelector(".msg-container"); // Fixed selector to target class
-let msg = document.querySelector(".msg"); // Fixed selector to target class
-
-let turnO = true; // True for player O's turn, false for player X
-
-const winPatterns = [
-    [0, 1, 2],
-    [0, 3, 6],
-    [0, 4, 8],
-    [1, 4, 7],
-    [2, 5, 8],
-    [2, 4, 6],
-    [3, 4, 5],
-    [6, 7, 8]
-];
-
-// Add event listeners to all boxes
-boxes.forEach((box) => {
-    box.addEventListener("click", () => {
-        if (box.innerText === "") {
-            // Check whose turn it is
-            if (turnO) {
-                box.innerText = "O"; // Player O's turn
-                turnO = false;
-            } else {
-                box.innerText = "X"; // Player X's turn
-                turnO = true;
-            }
-            box.style.pointerEvents = "none"; // Disable further clicks on the box
-            checkWinner(); // Check if there is a winner after the move
+        let r = row + dr, c = col + dc;
+        while (r >= 0 && r < size && c >= 0 && c < size && board[r * size + c] === player) {
+            cells.push([r, c]);
+            r += dr;
+            c += dc;
         }
-    });
-});
 
-// Display winner message
-const showWinner = (winner) => {
-    msg.innerText = `Congratulations, Winner is ${winner}`;
-    msgContainer.classList.remove("hide"); // Show the message container
-    disableAllBoxes(); // Disable all boxes after a winner is found
-};
+        r = row - dr;
+        c = col - dc;
+        while (r >= 0 && r < size && c >= 0 && c < size && board[r * size + c] === player) {
+            cells.push([r, c]);
+            r -= dr;
+            c -= dc;
+        }
 
-// Check for a winner
-const checkWinner = () => {
-    for (const pattern of winPatterns) {
-        const pos1val = boxes[pattern[0]].innerText;
-        const pos2val = boxes[pattern[1]].innerText;
-        const pos3val = boxes[pattern[2]].innerText;
-
-        // Check if all three positions have the same value and are not empty
-        if (pos1val !== "" && pos1val === pos2val && pos2val === pos3val) {
-            console.log("Winner:", pos1val);
-            showWinner(pos1val);
-            return;
+        if (cells.length >= winLength) {
+            return cells.map(([rr, cc]) => rr * size + cc);
         }
     }
+    return null;
+}
 
-    // Check for a draw (if all boxes are filled with no winner)
-    const allFilled = Array.from(boxes).every(box => box.innerText !== "");
-    if (allFilled) {
-        msg.innerText = "It's a Draw!";
-        msgContainer.classList.remove("hide");
+function highlightWin(cellIndexes) {
+    cellIndexes.forEach((i) => {
+        const box = gameEl.children[i];
+        if (box) box.classList.add("win");
+    });
+}
+
+function disableAllBoxes() {
+    Array.from(gameEl.children).forEach((box) => {
+        box.disabled = true;
+    });
+}
+
+function showMessage(text) {
+    msg.textContent = text;
+    msgContainer.classList.remove("hide");
+}
+
+function scheduleAutoRestart() {
+    clearTimeout(autoRestartTimer);
+    autoRestartTimer = setTimeout(startNewRound, AUTO_RESTART_DELAY_MS);
+}
+
+function endRound(result, winCellIndexes) {
+    roundOver = true;
+    disableAllBoxes();
+
+    if (result === "draw") {
+        scoreDraw++;
+        showMessage("It's a draw!");
+    } else {
+        if (winCellIndexes) highlightWin(winCellIndexes);
+        if (result === "O") scoreO++; else scoreX++;
+        showMessage(`Congratulations! Player ${result} wins!`);
     }
-};
 
-// Disable all boxes
-const disableAllBoxes = () => {
-    boxes.forEach(box => {
-        box.style.pointerEvents = "none";
-    });
-};
+    updateScoreboard();
+    scheduleAutoRestart();
+}
 
-// Reset the game
-resetBtn.addEventListener("click", () => {
-    boxes.forEach(box => {
-        box.innerText = ""; // Clear box text
-        box.style.pointerEvents = "auto"; // Re-enable clicks
-    });
-    msg.innerText = ""; // Clear the winner message
-    msgContainer.classList.add("hide"); // Hide the message container
-    turnO = true; // Reset turn to player O
-});
+function handleBoxClick(event) {
+    const box = event.target.closest(".box");
+    if (!box || roundOver) return;
 
-// Handle new game button functionality
-newGameBtn.addEventListener("click", () => {
-    console.log("New game started!");
-    resetBtn.click(); // Resets the board for a new game
-});
+    const index = Number(box.dataset.index);
+    if (Number.isNaN(index) || board[index] !== "") return;
+
+    const player = turnO ? "O" : "X";
+    board[index] = player;
+    box.textContent = player;
+    box.disabled = true;
+    turnO = !turnO;
+
+    const row = Math.floor(index / size);
+    const col = index % size;
+
+    const winCellIndexes = checkWinFrom(row, col);
+    if (winCellIndexes) {
+        endRound(player, winCellIndexes);
+        return;
+    }
+
+    if (board.every((v) => v !== "")) {
+        endRound("draw", null);
+        return;
+    }
+
+    updateTurnIndicator();
+}
+
+function startNewRound() {
+    clearTimeout(autoRestartTimer);
+    msgContainer.classList.add("hide");
+    buildBoard();
+}
+
+function resetEverything() {
+    clearTimeout(autoRestartTimer);
+    scoreO = 0;
+    scoreX = 0;
+    scoreDraw = 0;
+    updateScoreboard();
+    msgContainer.classList.add("hide");
+    buildBoard();
+}
+
+gameEl.addEventListener("click", handleBoxClick);
+resetBtn.addEventListener("click", resetEverything);
+newGameBtn.addEventListener("click", startNewRound);
+boardSizeSelect.addEventListener("change", resetEverything);
+
+buildBoard();
+updateScoreboard();
